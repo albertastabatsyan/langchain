@@ -1,0 +1,3 @@
+UX/UI related Improvements and fixes
+Added CSV, Word, PowerPoint for Document Q&As & Text Embeddings
+Better URL Loader parsing also html links
