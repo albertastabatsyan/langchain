@@ -1,0 +1,119 @@
+Padrão de Design Organizacional:,Fonte
+"Debate Estruturado
+Problema: Falta de espaço para debate de ideias em reuniões regulares estruturadas.
+
+Contexto onde se aplica a solução: Organizações que utilizam tecnologia social como O2 ou possuem práticas de reunião com tempo restrito para debates.
+
+Solução:
+Realizar sessões de debate estruturado, onde um facilitador guia os participantes na apresentação de argumentos prós e contras, complementos e perguntas esclarecedoras, registrando-os em um documento.
+
+1. Pessoa que sente tensão convida para sessão de debate, definindo tema como pergunta.
+2. Escolher facilitador no início da sessão.
+3; Solicitante apresenta a questão, e um documento é aberto para registrar argumentos prós e contras.
+4. Facilitador guia os participantes para apresentar argumentos, complementos e perguntas esclarecedoras.
+Processo se repete até que solicitante esteja satisfeito ou tempo esgote.
+Objetivo não é consenso, mas debater tema importante, expondo argumentos prós e contras.
+",https://o2.targetteal.com/biblioteca/padroes/debate-estruturado 
+"Fórum Light
+Problema: Falta de segurança emocional e confiança em um grupo ou organização, com conversas difíceis evitadas e conflitos velados.
+Contexto onde se aplica a solução: Ambientes de trabalho ou grupos que necessitam de relações saudáveis e confiança mútua.
+Solução:
+1. Criar um fórum regular para tratar das questões vivas no campo relacional.
+2. Firmar acordos, como frear julgamentos e falar em primeira pessoa.
+3. Propor a ""cadeira vazia"" para que alguém possa falar sobre o que está incomodando.
+4. Voluntários fazem o espelho da fala, parafraseando o que foi dito e perguntando se há algo mais a ser complementado.
+",https://o2.targetteal.com/biblioteca/padroes/forum-light
+"Assincronicidade
+Problema:  Excesso de tensões ou itens na pauta de reuniões de um time ou círculo e falta de processos efetivos para tratá-las de forma assíncrona.
+
+Contexto: Um círculo ou time com muitas tensões e pouco tempo nas reuniões para processá-las, ou quando se busca menos e reuniões mais curtas.
+
+Solução:
+Propor quatro elementos para diminuir o número de tensões em uma reunião de círculo:
+Mecanismos para dar visibilidade do andamento do trabalho e projetos.
+Canais de comunicação assíncrona e/ou co-localização do círculo.
+Processo acordado para mudar a estrutura de forma assíncrona.
+Estrutura de papéis que ofereça clareza sobre quem tem autoridade.
+
+",https://o2.targetteal.com/biblioteca/padroes/assincronicidade
+"Seis Chapéus do Pensamento 
+Contexto:
+Ambientes de discussão e tomada de decisão em grupos, onde a diversidade de perspectivas é essencial para a análise de problemas e geração de soluções criativas.
+
+Problema:
+Dificuldade em abordar problemas de maneira eficiente e estruturada, considerando diferentes perspectivas e evitando conflitos pessoais ou discussões improdutivas.
+
+Solução - Método dos Seis Chapéus do Pensamento de Edward de Bono:
+
+Um formato de discussão onde os participantes do grupo alternem entre os diferentes ""chapéus"" durante a sessão.
+
+Chapéu Branco - Foco nos dados e informações disponíveis, buscando fatos e informações objetivas.
+Chapéu Vermelho - Aborda emoções, sentimentos e intuições, permitindo a expressão de opiniões pessoais sem justificativas.
+Chapéu Preto - Examinar riscos, desvantagens e aspectos negativos, aplicando pensamento crítico e cauteloso.
+Chapéu Amarelo - Explorar benefícios, vantagens e aspectos positivos, aplicando pensamento otimista e construtivo.
+Chapéu Verde - Estimular a criatividade e geração de ideias inovadoras, buscando alternativas e soluções fora da caixa.
+Chapéu Azul - Foco no controle e organização do processo de pensamento, estabelecendo objetivos, estratégias e avaliando resultados.
+O método propõe que os participantes do grupo alternem entre os diferentes ""chapéus"" durante a discussão, permitindo abordar o problema de várias perspectivas e promovendo a colaboração e a eficiência na tomada de decisão.",https://drive.google.com/file/d/1wU8_OU3szNEA4ntjBwcerdR_QP-sFKHz/view?usp=sharing
+"World Café
+Contexto:
+Ambientes que buscam promover a troca de ideias, conhecimentos e experiências entre grupos de pessoas, como empresas, comunidades e organizações.
+
+Problema:
+Dificuldade em criar um ambiente acolhedor e produtivo para o compartilhamento e desenvolvimento de ideias, que permita a participação ativa de todos os envolvidos.
+
+Solução - World Café:
+O World Café é uma metodologia que utiliza conversas informais em pequenos grupos para abordar questões importantes, estimular o compartilhamento de ideias e gerar soluções coletivas. A técnica envolve os seguintes passos:
+
+Preparação do ambiente: Criar um espaço acolhedor e descontraído, com mesas pequenas, cadeiras, papel, canetas e outros materiais para anotações e desenhos.
+Definição de questões: Escolher uma ou mais perguntas relevantes e significativas para o contexto do grupo, que estimulem a reflexão e a colaboração.
+Conversas em pequenos grupos: Dividir os participantes em pequenos grupos, de 4 a 5 pessoas, e promover rodadas de conversas em torno das questões definidas. Cada rodada dura cerca de 20 a 30 minutos.
+Troca de grupos: Após cada rodada, os participantes são encorajados a trocar de mesa e compartilhar as ideias discutidas na rodada anterior com os novos membros do grupo.
+Registro e compartilhamento: Os participantes registram suas ideias, descobertas e padrões identificados nas conversas. Ao final, todos se reúnem em uma sessão plenária para compartilhar e debater os resultados.
+Síntese e ação: Identificar os insights, temas e padrões emergentes das conversas, e definir ações concretas a serem implementadas.
+O World Café facilita a troca de ideias, promove a colaboração e a criação de soluções coletivas, permitindo a participação ativa e o envolvimento de todos os presentes.",https://theworldcafe.com/
+"Papel de Facilitador
+Problema:
+Baixa qualidade das conversas e interações em reuniões, dificultando a abordagem de temas difíceis e a concentração no conteúdo ou pessoa gestora manipulando de maneira sútil das decisões, evitando o efeito HIPPO.
+
+Contexto onde se aplica a solução:
+Reuniões e conversas organizacionais onde a qualidade das interações e o engajamento dos participantes são essenciais.
+
+Solução:
+Adotar o papel de facilitador, uma pessoa focada no processo e na forma das interações, que não seja o chefe ou a pessoa com maior autoridade no grupo. Algumas vantagens dessa abordagem incluem:
+
+Participantes se concentram no conteúdo da conversa, já que o facilitador cuida do processo.
+Facilitador se sente mais seguro para fazer intervenções delicadas.
+O facilitador podem manter uma estrutura da reunião, por exemplo com uma pauta dinâmica.
+Participantes se sentem mais seguros para trazer temas difíceis, sabendo que serão acolhidos pelo facilitador.
+A solução propõe que os próprios participantes aprendam a facilitar e alternem esse papel por meio de eleições regulares. 
+O papel do facilitador também atua como uma intervenção para contrapor o chefe, a manipulação e as estruturas de dominação presentes nas conversas organizacionais.",
+"Problema:
+Dificuldade em dar clareza sobre o que é prioritário, entre tarefas, projetos e objetivos para um time.
+
+Contexto onde se aplica a solução:
+A solução se aplica a equipes e organizações de diversos tamanhos, que muitas vezes sofre com a sobrecarga devido à grande quantidade de trabalho e demandas.
+
+Solução:
+A solução proposta é utilizar uma estratégia de polaridades para dar clareza ao que é importante e definir o que não é importante no momento. Isso é feito por meio de uma heurística de priorização bimodal, que consiste em usar a expressão ""X mais que Y"" para definir a ordem de prioridade. O Elo Externo ou papel responsável por isso pode simplesmente escrever uma ou mais sentenças de prioridade bimodal e publicá-las em algum local acessível para todo o círculo. É importante que tanto o X quanto o Y sejam coisas importantes e valiosas e que as sentenças estejam coerentes com o propósito do círculo e as suas responsabilidades.",https://o2.targetteal.com/biblioteca/padroes/priorizacao-bimodal
+"Revisão Tática
+Problema:
+Grupos, times ou organizações têm dificuldade em acompanhar e olhar para o resultado do seu trabalho regularmente devido à ampla gama de informações que precisam ser consideradas em um curto espaço de tempo.
+
+Contexto onde se aplica a solução:
+A solução se aplica a qualquer grupo, time ou organização que necessita acompanhar e olhar para o resultado do seu trabalho regularmente. Pode ser útil para evitar um longo processo de Status Report. Se o grupo não tem papéis ou atribuição clara de atividades esse processo pode não funcionar. 
+Solução:
+A solução proposta é utilizar o Modo Revisar da Reunião de Círculo, onde o Facilitador conduz a revisão de três elementos que capturam praticamente todos os tipos de trabalho que um grupo executa: checklists, métricas e projetos. As checklists são perguntas com resposta ""Sim"" ou ""Não"" que buscam dar clareza se uma determinada atividade recorrente aconteceu no período sendo verificado. As métricas são indicadores quantitativos associados a um Papel e que representam uma leitura do contexto no qual Círculo está inserido. Já os projetos são iniciativas com início, meio e fim e que buscam chegar a um determinado resultado. O objetivo é que essa revisão ajude a garantir a auto-organização em um grupo e que os participantes tenham visibilidade sobre o que está acontecendo.",https://o2.targetteal.com/biblioteca/padroes/revisao-tatica
+"Rodada
+Problema:
+
+Competição por espaço de fala e falhas na comunicação durante conversas em grupo.
+Contexto onde se aplica a solução:
+Reuniões, encontros e discussões em equipe.
+
+Solução: Modo Rodada
+
+Apenas uma pessoa fala por vez, seguindo uma ordem ou ao ser convidada.
+Pode ser facilitado por um anfitrião ou usando um ""bastão da fala"".
+Promove respeito e espaço de fala para todos os participantes, permitindo conversas generativas.
+
+Sermos perfeitamente iguais numa rodada é diferente de quando as pessoas mais assertivas convidam as vozes dos introvertidos. Assim ouvimos todas as pessoas desde o início ao invés de passar a maior parte do tempo somente com as ideias dos extrovertidos.",https://targetteal.com/pt/blog/desenhando-conversas-e-reunioes-onde-todos-participam/

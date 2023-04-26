@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+
+import asyncio
+import httpx
+
+
+import requests
 from typing import List, Optional
 
 from pydantic import ValidationError
@@ -76,7 +82,7 @@ class AutoGPT:
             feedback_tool=human_feedback_tool,
         )
 
-    def run(self, goals: List[str]) -> str:
+    async def run(self, goals: List[str], thread_item: str, max_iterations: int = 10) -> str:
         user_input = (
             "Determine which next command to use, "
             "and respond using the format specified above:"
@@ -86,6 +92,9 @@ class AutoGPT:
         while True:
             # Discontinue if continuous limit is reached
             loop_count += 1
+            if loop_count > max_iterations:
+                print("Maximum iterations reached.")
+                break   
 
             # Send message to AI, get response
             assistant_reply = self.chain.run(
@@ -131,5 +140,25 @@ class AutoGPT:
                     return "EXITING"
                 memory_to_add += feedback
 
+            await send_result_to_api(assistant_reply, thread_item)  # Await the async function
+
             self.memory.add_documents([Document(page_content=memory_to_add)])
             self.full_message_history.append(SystemMessage(content=result))
+
+
+async def send_result_to_api(assistant_reply: str, thread_item: str):
+    api_url = "https://ai-finetune.bubbleapps.io/version-live/api/1.1/wf/replittest_2"
+    data = {"result": assistant_reply, "thread_item": thread_item}
+    async with httpx.AsyncClient() as client:
+        response = await client.post(api_url, json=data)
+
+    if response.status_code == 200:
+        print("Result sent successfully")
+    else:
+        print(f"Failed to send result. Status code: {response.status_code}")
+
+
+
+
+
+

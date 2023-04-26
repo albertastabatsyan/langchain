@@ -2,6 +2,9 @@ import os
 import json
 import requests
 
+import asyncio
+import httpx
+
 from flask import Flask, jsonify, request
 from flask_restful import Resource, Api
 from threading import Thread
@@ -30,8 +33,9 @@ def home():
   return "I'm alive"
 
 
+
 ######################################################################
-##APi using Flask - CHAINS - Retrieval QA
+##APi using Flask - CHAINS - Retrieval QA - 1
 ########################################################################
 
 @app.route('/chains_qa', methods=['POST'])
@@ -75,6 +79,70 @@ def chains_qa():
   result = qa.run(query)
   
   return jsonify({'answer': str(result)}, {'sources': text})
+
+
+
+
+
+######################################################################
+##APi using Flask - CHAINS - Retrieval QA - 2
+########################################################################
+
+@app.route('/chains_qa_comp', methods=['POST'])
+def chains_qa_comp():
+  data = request.get_json()
+  namespace = data['namespace']
+  namespace_temp = data['namespace_temp']
+  query = data['query']
+  chain_type = data['chain_type']
+
+
+  from langchain.retrievers import ContextualCompressionRetriever
+  from langchain.retrievers.document_compressors import LLMChainExtractor
+    
+  query = query
+
+  
+  
+  embeddings = OpenAIEmbeddings()
+
+  vectorstore = Pinecone(index, embeddings.embed_query, "text", namespace).as_retriever()
+
+
+  llm = OpenAI(temperature=0)
+  compressor = LLMChainExtractor.from_llm(llm)
+  compression_retriever = ContextualCompressionRetriever(base_compressor=compressor, base_retriever=vectorstore)
+  
+  results = compression_retriever.get_relevant_documents(query)
+  text = [doc.page_content for doc in results]
+
+  
+
+  
+  text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+  texts = text_splitter.split_text(str(text))
+
+
+  embeddings = OpenAIEmbeddings()
+  
+  index_name = "fine-tuner"                
+  namespace = namespace
+  docsearch = Pinecone.from_texts(texts,
+                                        embeddings,
+                                        namespace=namespace_temp,
+                                        index_name=index_name)
+  
+  qa = RetrievalQA.from_chain_type(llm=OpenAI(),
+                                     chain_type=chain_type,
+                                     retriever=docsearch.as_retriever())
+  
+  result = qa.run(query)
+  
+  return jsonify({'answer': str(result)}, {'sources': text})
+
+
+
+
 
 
 
@@ -184,9 +252,7 @@ def agents_zsrd():
   query = data['query']
   tools_string = data['tools']
 
-  print(tools_string)
-  
-  llm = ChatOpenAI(temperature=0.0)
+  llm = OpenAI(temperature=0.0)
   math_llm = OpenAI(temperature=0.0)
   tools = load_tools(
       tools_string, 
@@ -509,6 +575,84 @@ def agents_babyagi():
 
   # Return all_results as a JSON object
   return jsonify({"all_results": all_results, "thread_item": thread_item, "iterations": iterations})
+
+
+
+
+
+
+
+
+
+######################################################################
+##APi using Flask - AutoGPT
+######################################################################
+
+@app.route('/agents_autogpt', methods=['POST'])
+def agents_autogpt():
+  data = request.get_json()
+  objective = data['objective']
+  thread_item = data['thread_item']
+  iterations = data['iterations']
+
+
+
+  
+  from langchain.utilities import GoogleSerperAPIWrapper
+  from langchain.agents import Tool
+  from langchain.tools.file_management.write import WriteFileTool
+  from langchain.tools.file_management.read import ReadFileTool
+  from langchain.tools.human.tool import HumanInputRun
+  
+  
+  search = GoogleSerperAPIWrapper()
+  tools = [
+      Tool(
+          name = "search",
+          func=search.run,
+          description="useful for when you need to answer questions about current events. You should ask targeted questions"
+      ),
+      WriteFileTool(),
+      ReadFileTool(),
+  ]
+  
+  
+  from langchain.vectorstores import FAISS
+  from langchain.docstore import InMemoryDocstore
+  from langchain.embeddings import OpenAIEmbeddings
+  
+  
+  # Define your embedding model
+  embeddings_model = OpenAIEmbeddings()
+  # Initialize the vectorstore as empty
+  import faiss
+  
+  embedding_size = 1536
+  index = faiss.IndexFlatL2(embedding_size)
+  vectorstore = FAISS(embeddings_model.embed_query, index, InMemoryDocstore({}), {})
+  
+  
+  from langchain.experimental import AutoGPT
+  from langchain.chat_models import ChatOpenAI
+  
+  
+  agent = AutoGPT.from_llm_and_tools(
+      ai_name="Tom",
+      ai_role="Assistant",
+      tools=tools,
+      llm=ChatOpenAI(temperature=0),
+      memory=vectorstore.as_retriever()
+  )
+  
+  # Set verbose to be true
+  agent.chain.verbose = True
+  
+
+  results = asyncio.run(agent.run([objective], thread_item, max_iterations=iterations))
+
+
+
+
 
 
 

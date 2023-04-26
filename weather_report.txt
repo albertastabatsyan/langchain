@@ -1,0 +1,8 @@
+Weather Report for Berlin Today:
+
+Temperature: 62°F
+Conditions: Mostly Cloudy
+Chance of Precipitation: 10%
+Wind: 5 mph from the West
+
+This report is based on information gathered on April 23, 2023.
