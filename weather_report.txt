@@ -1,0 +1,3 @@
+Weather Report for San Francisco:
+
+Current Temperature: 51°F

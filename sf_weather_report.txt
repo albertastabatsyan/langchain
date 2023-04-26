@@ -1,0 +1,8 @@
+Weather Report for San Francisco Today:
+
+Temperature: 66°F
+Conditions: Partly Cloudy
+Chance of Precipitation: 0%
+Wind: 10 mph from the West
+
+Have a great day in San Francisco!

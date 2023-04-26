@@ -1,5 +1,8 @@
 { pkgs }: {
   deps = [
+    pkgs.imagemagick6_light
+    pkgs.wget
+    pkgs.sudo
     pkgs.lsof
     pkgs.python310Full
     pkgs.replitPackages.prybar-python310
