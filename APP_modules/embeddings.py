@@ -18,11 +18,12 @@ embeddings = OpenAIEmbeddings()
 
 
 
-from langchain.chains import RetrievalQA
 from langchain.embeddings.openai import OpenAIEmbeddings
 
 from langchain.vectorstores.elastic_vector_search import ElasticVectorSearch
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.text_splitter import CharacterTextSplitter
+
 from langchain.llms import OpenAI
 
 from flask import Flask, jsonify, request
@@ -39,7 +40,7 @@ def get_file_extension(url):
   file_extension = os.path.splitext(parsed_url.path)[-1]
   return file_extension.lower()
 
-def embeddings_file_handler(url, chunk_size, namespace):
+def embeddings_file_handler(url, chunk_size, namespace, id):
   
     # Get the file extension from the URL
     file_extension = get_file_extension(url)
@@ -71,79 +72,95 @@ def embeddings_file_handler(url, chunk_size, namespace):
     with open(file_path, "wb") as f:
         f.write(response.content)
 
+
     loader = loader_class(file_path)
     documents = loader.load()
-  
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size = chunk_size,
-        chunk_overlap  = 20,
-        length_function = len,
-)
-  
-    texts = text_splitter.split_documents(documents)
-    vectorstore = Pinecone(index, embeddings.embed_query, "text")
+
+    
+    text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+    docs = text_splitter.split_documents(documents)
+    
+    embeddings = OpenAIEmbeddings()
+    
+    index_name = "fine-tuner"
+    namespace = namespace
+    
+    # docsearch = Pinecone.from_existing_index(index_name, embeddings)
+    # docsearch = Pinecone.from_documents(docs, embeddings, index_name=index_name)
+    
+    docsearch = Pinecone.from_documents(docs, embeddings, index_name=index_name, namespace=namespace)
 
   
-    upserted_ids = []
-    for text in texts:
-        text_str = str(text)
-        upsert_id = vectorstore.add_texts([text_str], namespace=namespace)
-        upserted_ids.extend(upsert_id)
-
-  
-    return jsonify({'data': [str(document) for document in upserted_ids]})
+    return {'data': str(docs)}
 
 
 
 
 
-def embeddings_web_handler(url, chunk_size, namespace):
+
+
+def embeddings_web_handler(url, chunk_size, namespace, id):
 
   urls = [url]
   
   from langchain.document_loaders import UnstructuredURLLoader
   loader = UnstructuredURLLoader(urls)
-  data = str(loader.load())
   
-  text_splitter = RecursiveCharacterTextSplitter(
-      chunk_size = chunk_size,
-      chunk_overlap  = 20,
-      length_function = len,
-)
+  documents = loader.load()
 
-  texts = text_splitter.split_text(str(data))
-  vectorstore = Pinecone(index, embeddings.embed_query, "text")
+    
+  text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+  docs = text_splitter.split_documents(documents)
+    
+  embeddings = OpenAIEmbeddings()
+    
+  index_name = "fine-tuner"
+  namespace = namespace
+    
+    # docsearch = Pinecone.from_existing_index(index_name, embeddings)
+    # docsearch = Pinecone.from_documents(docs, embeddings, index_name=index_name)
+    
+  docsearch = Pinecone.from_documents(docs, embeddings, index_name=index_name, namespace=namespace)
+
   
-  upserted_ids = []
-  for text in texts:
-      upsert_id = vectorstore.add_texts([text], namespace=namespace)
-      upserted_ids.extend(upsert_id)
-
-  return jsonify({'data': (upserted_ids)})
+  return {'data': str(docs)}
 
 
 
 
 
-def embeddings_text_handler(text, chunk_size, namespace):
 
-  data = str(text)
+
+
+
+
+
+
+
+
+
+
+def embeddings_text_handler(text, chunk_size, namespace, id):
   
-  text_splitter = RecursiveCharacterTextSplitter(
-      chunk_size = chunk_size,
-      chunk_overlap  = 20,
-      length_function = len,
-)
-
-  texts = text_splitter.split_text(str(data))
-  vectorstore = Pinecone(index, embeddings.embed_query, "text")
+  from langchain.docstore.document import Document
   
-  upserted_ids = []
-  for text in texts:
-      upsert_id = vectorstore.add_texts([text], namespace=namespace)
-      upserted_ids.extend(upsert_id)
+  documents = [Document(page_content=text)]
+    
+  text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+  docs = text_splitter.split_documents(documents)
+    
+  embeddings = OpenAIEmbeddings()
+    
+  index_name = "fine-tuner"
+  namespace = namespace
+    
+    # docsearch = Pinecone.from_existing_index(index_name, embeddings)
+    # docsearch = Pinecone.from_documents(docs, embeddings, index_name=index_name)
+    
+  docsearch = Pinecone.from_documents(docs, embeddings, index_name=index_name, namespace=namespace)
 
-  return jsonify({'data': (upserted_ids)})
+  
+  return {'data': str(docs)}
 
 
 

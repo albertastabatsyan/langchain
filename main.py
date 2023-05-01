@@ -2,6 +2,10 @@ import os
 import json
 import requests
 
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 import asyncio
 import httpx
 
@@ -15,6 +19,7 @@ from langchain.vectorstores import Pinecone
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.llms import OpenAI
 from langchain.chains import RetrievalQA
+from langchain.chains import RetrievalQAWithSourcesChain
 
 
 import pinecone
@@ -42,106 +47,32 @@ def home():
 def chains_qa():
   data = request.get_json()
   namespace = data['namespace']
-  namespace_temp = data['namespace_temp']
   query = data['query']
   chain_type = data['chain_type']
-
-
-  query = query
-
-  
-  embeddings = OpenAIEmbeddings()
-
-  vectorstore = Pinecone(index, embeddings.embed_query, "text", namespace)
-  
-  results = vectorstore.similarity_search(query)
-  text = [doc.page_content for doc in results]
-
-
-  
-  text_splitter = CharacterTextSplitter(chunk_size=400, chunk_overlap=0)
-  texts = text_splitter.split_text(str(text))
+  temp = data['temp']
 
 
   embeddings = OpenAIEmbeddings()
   
   index_name = "fine-tuner"                
   namespace = namespace
-  docsearch = Pinecone.from_texts(texts,
+  docsearch = Pinecone.from_existing_index(index_name,
                                         embeddings,
-                                        namespace=namespace_temp,
-                                        index_name=index_name)
+                                        namespace=namespace
+                                          )
+
+
+    # docsearch = Pinecone.from_existing_index(index_name, embeddings)
+    # docsearch = Pinecone.from_documents(docs, embeddings, index_name=index_name)
+
   
-  qa = RetrievalQA.from_chain_type(llm=OpenAI(),
+  qa = RetrievalQA.from_chain_type(llm=OpenAI(temperature=temp),
                                      chain_type=chain_type,
                                      retriever=docsearch.as_retriever())
   
   result = qa.run(query)
   
-  return jsonify({'answer': str(result)}, {'sources': text})
-
-
-
-
-
-######################################################################
-##APi using Flask - CHAINS - Retrieval QA - 2
-########################################################################
-
-@app.route('/chains_qa_comp', methods=['POST'])
-def chains_qa_comp():
-  data = request.get_json()
-  namespace = data['namespace']
-  namespace_temp = data['namespace_temp']
-  query = data['query']
-  chain_type = data['chain_type']
-
-
-  from langchain.retrievers import ContextualCompressionRetriever
-  from langchain.retrievers.document_compressors import LLMChainExtractor
-    
-  query = query
-
-  
-  
-  embeddings = OpenAIEmbeddings()
-
-  vectorstore = Pinecone(index, embeddings.embed_query, "text", namespace).as_retriever()
-
-
-  llm = OpenAI(temperature=0)
-  compressor = LLMChainExtractor.from_llm(llm)
-  compression_retriever = ContextualCompressionRetriever(base_compressor=compressor, base_retriever=vectorstore)
-  
-  results = compression_retriever.get_relevant_documents(query)
-  text = [doc.page_content for doc in results]
-
-  
-
-  
-  text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-  texts = text_splitter.split_text(str(text))
-
-
-  embeddings = OpenAIEmbeddings()
-  
-  index_name = "fine-tuner"                
-  namespace = namespace
-  docsearch = Pinecone.from_texts(texts,
-                                        embeddings,
-                                        namespace=namespace_temp,
-                                        index_name=index_name)
-  
-  qa = RetrievalQA.from_chain_type(llm=OpenAI(),
-                                     chain_type=chain_type,
-                                     retriever=docsearch.as_retriever())
-  
-  result = qa.run(query)
-  
-  return jsonify({'answer': str(result)}, {'sources': text})
-
-
-
+  return jsonify({'answer': str(result)})
 
 
 
@@ -155,40 +86,120 @@ def chains_qa_comp():
 
 
 from APP_modules.embeddings import embeddings_file_handler
+
+def process_and_notify(url, chunk_size, namespace, id):
+    logger.info("Processing started")
+    result = embeddings_file_handler(url, chunk_size, namespace, id)
+    logger.info(f"Processing completed. Result: {result}")
+
+    # Add the namespace to the result
+    result['id'] = id
+
+    # Convert the result to JSON
+    result_json = json.dumps(result)
+
+    # Send the result to the Bubble app
+    bubble_endpoint = "https://ai-finetune.bubbleapps.io/api/1.1/wf/webhook_upsert/"
+    headers = {'Content-Type': 'application/json'}
+    response = requests.post(bubble_endpoint, data=result_json, headers=headers)
+
+    logger.info(f"Response from Bubble app: {response.status_code}, {response.text}")
+
 @app.route('/embeddings_file', methods=['POST'])
 def embeddings_file():
-  data = request.get_json()
-  url = data['url']
-  chunk_size = data['chunk_size']
-  namespace = data['namespace']
+    data = request.get_json()
+    url = data['url']
+    chunk_size = data['chunk_size']
+    namespace = data['namespace']
+    id = data['id']
 
-  result = embeddings_file_handler(url, chunk_size, namespace)
-  return (result)
+
+    # Start a new thread to process the data and notify the Bubble app when done
+    t = Thread(target=process_and_notify, args=(url, chunk_size, namespace, id))
+    t.start()
+
+    return jsonify({"status": "Processing started"})
+
+
+
+
+
+
+
+
+
+
 
 
 from APP_modules.embeddings import embeddings_web_handler
+
+def process_and_notify_web(url, chunk_size, namespace, id):
+    logger.info("Processing started")
+    result = embeddings_web_handler(url, chunk_size, namespace, id)
+    logger.info(f"Processing completed. Result: {result}")
+
+    # Add the namespace to the result
+    result['id'] = id
+
+    # Convert the result to JSON
+    result_json = json.dumps(result)
+
+    # Send the result to the Bubble app
+    bubble_endpoint = "https://ai-finetune.bubbleapps.io/api/1.1/wf/webhook_upsert"
+    headers = {'Content-Type': 'application/json'}
+    response = requests.post(bubble_endpoint, data=result_json, headers=headers)
+
 @app.route('/embeddings_web', methods=['POST'])
 def embeddings_web():
-  data = request.get_json()
-  url = data['url']
-  chunk_size = data['chunk_size']
-  namespace = data['namespace']
+    data = request.get_json()
+    url = data['url']
+    chunk_size = data['chunk_size']
+    namespace = data['namespace']
+    id = data['id']
 
-  result = embeddings_web_handler(url, chunk_size, namespace)
-  return (result)
+    # Start a new thread to process the data and send the result to the Bubble app
+    t = Thread(target=process_and_notify_web, args=(url, chunk_size, namespace, id))
+    t.start()
+
+    return jsonify({"status": "processing_started"})
+
+
+
+
+
+
 
 
 
 from APP_modules.embeddings import embeddings_text_handler
+
+def process_and_notify_text(text, chunk_size, namespace, id):
+    result = embeddings_text_handler(text, chunk_size, namespace, id)
+    # Add the namespace to the result
+
+    result['id'] = id
+
+    # Convert the result to JSON
+    result_json = json.dumps(result)
+
+    # Send the result to the Bubble app
+    bubble_endpoint = "https://ai-finetune.bubbleapps.io/api/1.1/wf/webhook_upsert"
+    headers = {'Content-Type': 'application/json'}
+    response = requests.post(bubble_endpoint, data=result_json, headers=headers)
+
+
 @app.route('/embeddings_text', methods=['POST'])
 def embeddings_text():
-  data = request.get_json()
-  text = data['text']
-  chunk_size = data['chunk_size']
-  namespace = data['namespace']
+    data = request.get_json()
+    text = data['text']
+    chunk_size = data['chunk_size']
+    namespace = data['namespace']
+    id = data['id']
 
-  result = embeddings_text_handler(text, chunk_size, namespace)
-  return (result)
+    t = Thread(target=process_and_notify_text, args=(text, chunk_size, namespace, id))
+    t.start()
+
+    return jsonify({'status': 'Processing started'})
 
 
 
