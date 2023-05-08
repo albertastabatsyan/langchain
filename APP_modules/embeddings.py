@@ -40,7 +40,7 @@ def get_file_extension(url):
   file_extension = os.path.splitext(parsed_url.path)[-1]
   return file_extension.lower()
 
-def embeddings_file_handler(url, chunk_size, namespace, id):
+def embeddings_file_handler(url, namespace, id):
   
     # Get the file extension from the URL
     file_extension = get_file_extension(url)
@@ -77,29 +77,24 @@ def embeddings_file_handler(url, chunk_size, namespace, id):
     documents = loader.load()
 
     
-    text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-    docs = text_splitter.split_documents(documents)
-    
-    embeddings = OpenAIEmbeddings()
-    
-    index_name = "fine-tuner"
-    namespace = namespace
     
     # docsearch = Pinecone.from_existing_index(index_name, embeddings)
     # docsearch = Pinecone.from_documents(docs, embeddings, index_name=index_name)
     
-    docsearch = Pinecone.from_documents(docs, embeddings, index_name=index_name, namespace=namespace)
+    pinecone = Pinecone(index=index, embedding_function=embeddings.embed_query, text_key="text", namespace=namespace)
+    
+    docsearch = pinecone.add_documents(documents=documents)
 
-  
-    return {'data': str(docs)}
-
-
-
+    return {'data': str(documents), 'ids': docsearch}
 
 
 
 
-def embeddings_web_handler(url, chunk_size, namespace, id):
+
+
+
+
+def embeddings_web_handler(url, namespace, id):
 
   urls = [url]
   
@@ -108,22 +103,14 @@ def embeddings_web_handler(url, chunk_size, namespace, id):
   
   documents = loader.load()
 
+  # docsearch = Pinecone.from_existing_index(index_name, embeddings)
+  # docsearch = Pinecone.from_documents(docs, embeddings, index_name=index_name)
     
-  text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-  docs = text_splitter.split_documents(documents)
+  pinecone = Pinecone(index=index, embedding_function=embeddings.embed_query, text_key="text", namespace=namespace)
     
-  embeddings = OpenAIEmbeddings()
-    
-  index_name = "fine-tuner"
-  namespace = namespace
-    
-    # docsearch = Pinecone.from_existing_index(index_name, embeddings)
-    # docsearch = Pinecone.from_documents(docs, embeddings, index_name=index_name)
-    
-  docsearch = Pinecone.from_documents(docs, embeddings, index_name=index_name, namespace=namespace)
+  docsearch = pinecone.add_documents(documents=documents)
 
-  
-  return {'data': str(docs)}
+  return {'data': str(documents), 'ids': docsearch}
 
 
 
@@ -134,37 +121,49 @@ def embeddings_web_handler(url, chunk_size, namespace, id):
 
 
 
-
-
-
-
-
-
-def embeddings_text_handler(text, chunk_size, namespace, id):
+def embeddings_text_handler(text, namespace, id):
   
   from langchain.docstore.document import Document
   
   documents = [Document(page_content=text)]
     
-  text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-  docs = text_splitter.split_documents(documents)
+  # docsearch = Pinecone.from_existing_index(index_name, embeddings)
+  # docsearch = Pinecone.from_documents(docs, embeddings, index_name=index_name)
     
-  embeddings = OpenAIEmbeddings()
+  pinecone = Pinecone(index=index, embedding_function=embeddings.embed_query, text_key="text", namespace=namespace)
     
-  index_name = "fine-tuner"
-  namespace = namespace
-    
-    # docsearch = Pinecone.from_existing_index(index_name, embeddings)
-    # docsearch = Pinecone.from_documents(docs, embeddings, index_name=index_name)
-    
-  docsearch = Pinecone.from_documents(docs, embeddings, index_name=index_name, namespace=namespace)
+  docsearch = pinecone.add_documents(documents=documents)
 
+  return {'data': str(documents), 'ids': docsearch}
+
+
+
+
+
+
+
+
+
+def embeddings_twitter_handler(handle, token, number_tweets, namespace, id):
   
-  return {'data': str(docs)}
+  from langchain.document_loaders import TwitterTweetLoader
+  loader = TwitterTweetLoader.from_bearer_token(
+oauth2_bearer_token=token,
+      twitter_users=[handle],
+      number_tweets=number_tweets,  # Default value is 100
+  )
+ 
+  from langchain.docstore.document import Document
+  documents = loader.load()
 
+  docs = [Document(page_content=str(doc)) for doc in documents]
 
+  # docsearch = Pinecone.from_existing_index(index_name, embeddings)
+  # docsearch = Pinecone.from_documents(docs, embeddings, index_name=index_name)
+    
+  pinecone = Pinecone(index=index, embedding_function=embeddings.embed_query, text_key="text", namespace=namespace)
+    
+  docsearch = pinecone.add_documents(documents=docs)
 
-
-
-
+  return {'data': str(documents), 'ids': docsearch}
 

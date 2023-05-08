@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import json
 import requests
@@ -18,8 +20,27 @@ from langchain.vectorstores.elastic_vector_search import ElasticVectorSearch
 from langchain.vectorstores import Pinecone
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.llms import OpenAI
+from langchain.chat_models import ChatAnthropic
+
 from langchain.chains import RetrievalQA
 from langchain.chains import RetrievalQAWithSourcesChain
+
+
+
+
+from typing import Any, Dict, List, Optional
+from pydantic import Extra
+from langchain.callbacks.manager import (
+  AsyncCallbackManagerForChainRun,
+  CallbackManagerForChainRun,
+)
+from langchain.chains.base import Chain
+from langchain.base_language import BaseLanguageModel
+from langchain.prompts.base import BasePromptTemplate
+from langchain.prompts import PromptTemplate
+
+
+
 
 
 import pinecone
@@ -50,6 +71,8 @@ def chains_qa():
   query = data['query']
   chain_type = data['chain_type']
   temp = data['temp']
+  LLM = data['LLM']
+
 
 
   embeddings = OpenAIEmbeddings()
@@ -65,8 +88,16 @@ def chains_qa():
     # docsearch = Pinecone.from_existing_index(index_name, embeddings)
     # docsearch = Pinecone.from_documents(docs, embeddings, index_name=index_name)
 
+
+  if LLM == "anthropic":
+      llm = ChatAnthropic(temperature=temp)
+  elif LLM == "openai":
+     llm = OpenAI(temperature=temp)
+  else:
+      return jsonify({"error": "Invalid LLM value"}), 400
   
-  qa = RetrievalQA.from_chain_type(llm=OpenAI(temperature=temp),
+  
+  qa = RetrievalQA.from_chain_type(llm,
                                      chain_type=chain_type,
                                      retriever=docsearch.as_retriever())
   
@@ -87,9 +118,9 @@ def chains_qa():
 
 from APP_modules.embeddings import embeddings_file_handler
 
-def process_and_notify(url, chunk_size, namespace, id):
+def process_and_notify(url, namespace, id):
     logger.info("Processing started")
-    result = embeddings_file_handler(url, chunk_size, namespace, id)
+    result = embeddings_file_handler(url, namespace, id)
     logger.info(f"Processing completed. Result: {result}")
 
     # Add the namespace to the result
@@ -99,7 +130,7 @@ def process_and_notify(url, chunk_size, namespace, id):
     result_json = json.dumps(result)
 
     # Send the result to the Bubble app
-    bubble_endpoint = "https://ai-finetune.bubbleapps.io/api/1.1/wf/webhook_upsert/"
+    bubble_endpoint = "https://ai-finetune.bubbleapps.io/api/1.1/wf/webhook_upsert"
     headers = {'Content-Type': 'application/json'}
     response = requests.post(bubble_endpoint, data=result_json, headers=headers)
 
@@ -109,13 +140,12 @@ def process_and_notify(url, chunk_size, namespace, id):
 def embeddings_file():
     data = request.get_json()
     url = data['url']
-    chunk_size = data['chunk_size']
     namespace = data['namespace']
     id = data['id']
 
 
     # Start a new thread to process the data and notify the Bubble app when done
-    t = Thread(target=process_and_notify, args=(url, chunk_size, namespace, id))
+    t = Thread(target=process_and_notify, args=(url, namespace, id))
     t.start()
 
     return jsonify({"status": "Processing started"})
@@ -133,9 +163,9 @@ def embeddings_file():
 
 from APP_modules.embeddings import embeddings_web_handler
 
-def process_and_notify_web(url, chunk_size, namespace, id):
+def process_and_notify_web(url, namespace, id):
     logger.info("Processing started")
-    result = embeddings_web_handler(url, chunk_size, namespace, id)
+    result = embeddings_web_handler(url, namespace, id)
     logger.info(f"Processing completed. Result: {result}")
 
     # Add the namespace to the result
@@ -153,12 +183,11 @@ def process_and_notify_web(url, chunk_size, namespace, id):
 def embeddings_web():
     data = request.get_json()
     url = data['url']
-    chunk_size = data['chunk_size']
     namespace = data['namespace']
     id = data['id']
 
     # Start a new thread to process the data and send the result to the Bubble app
-    t = Thread(target=process_and_notify_web, args=(url, chunk_size, namespace, id))
+    t = Thread(target=process_and_notify_web, args=(url, namespace, id))
     t.start()
 
     return jsonify({"status": "processing_started"})
@@ -173,8 +202,8 @@ def embeddings_web():
 
 from APP_modules.embeddings import embeddings_text_handler
 
-def process_and_notify_text(text, chunk_size, namespace, id):
-    result = embeddings_text_handler(text, chunk_size, namespace, id)
+def process_and_notify_text(text, namespace, id):
+    result = embeddings_text_handler(text, namespace, id)
     # Add the namespace to the result
 
     result['id'] = id
@@ -192,14 +221,60 @@ def process_and_notify_text(text, chunk_size, namespace, id):
 def embeddings_text():
     data = request.get_json()
     text = data['text']
-    chunk_size = data['chunk_size']
     namespace = data['namespace']
     id = data['id']
 
-    t = Thread(target=process_and_notify_text, args=(text, chunk_size, namespace, id))
+    t = Thread(target=process_and_notify_text, args=(text, namespace, id))
     t.start()
 
     return jsonify({'status': 'Processing started'})
+
+
+
+
+
+
+
+
+
+
+from APP_modules.embeddings import embeddings_twitter_handler
+
+def process_and_notify_twitter(handle, token, number_tweets, namespace, id):
+    result = embeddings_twitter_handler(handle, token, number_tweets, namespace, id)
+    # Add the namespace to the result
+
+    result['id'] = id
+
+    # Convert the result to JSON
+    result_json = json.dumps(result)
+
+    # Send the result to the Bubble app
+    bubble_endpoint = "https://ai-finetune.bubbleapps.io/api/1.1/wf/webhook_upsert"
+    headers = {'Content-Type': 'application/json'}
+    response = requests.post(bubble_endpoint, data=result_json, headers=headers)
+
+
+@app.route('/embeddings_twitter', methods=['POST'])
+def embeddings_twitter():
+    data = request.get_json()   
+    handle = data['handle']
+    namespace = data['namespace']
+    token = data['token']
+    number_tweets = data['number_tweets']
+    id = data['id']
+
+    t = Thread(target=process_and_notify_twitter, args=(handle, token, number_tweets, namespace, id))
+    t.start()
+
+    return jsonify({'status': 'Processing started'})
+
+
+
+
+
+
+
 
 
 
@@ -660,6 +735,189 @@ def agents_autogpt():
   
 
   results = asyncio.run(agent.run([objective], thread_item, max_iterations=iterations))
+
+
+
+
+
+
+
+######################################################################
+##APi using Flask - ImageQA Chain
+######################################################################
+
+
+@app.route('/chains_image', methods=['POST'])
+def chains_image():
+  data = request.get_json()
+  query = data['query']
+  history = data['history']
+  image_description = data['image_description']
+
+  
+  
+  class MyCustomChain(Chain):
+    """
+      An example of a custom chain.
+      """
+  
+    prompt: BasePromptTemplate
+    """Prompt object to use."""
+    llm: BaseLanguageModel
+    output_key: str = "text"  #: :meta private:
+  
+    class Config:
+      """Configuration for this pydantic object."""
+  
+      extra = Extra.forbid
+      arbitrary_types_allowed = True
+  
+    @property
+    def input_keys(self) -> List[str]:
+      """Will be whatever keys the prompt expects.
+  
+          :meta private:
+          """
+      return self.prompt.input_variables
+  
+    @property
+    def output_keys(self) -> List[str]:
+      """Will always return text key.
+  
+          :meta private:
+          """
+      return [self.output_key]
+  
+    def _call(
+      self,
+      inputs: Dict[str, Any],
+      run_manager: Optional[CallbackManagerForChainRun] = None,
+    ) -> Dict[str, str]:
+      # Your custom chain logic goes here
+      # This is just an example that mimics LLMChain
+      prompt_value = self.prompt.format_prompt(**inputs)
+  
+      # Whenever you call a language model, or another chain, you should pass
+      # a callback manager to it. This allows the inner run to be tracked by
+      # any callbacks that are registered on the outer run.
+      # You can always obtain a callback manager for this by calling
+      # `run_manager.get_child()` as shown below.
+      response = self.llm.generate_prompt(
+        [prompt_value],
+        callbacks=run_manager.get_child() if run_manager else None)
+  
+      # If you want to log something about this run, you can do so by calling
+      # methods on the `run_manager`, as shown below. This will trigger any
+      # callbacks that are registered for that event.
+      if run_manager:
+        run_manager.on_text("Log something about this run")
+  
+      return {self.output_key: response.generations[0][0].text}
+  
+    async def _acall(
+      self,
+      inputs: Dict[str, Any],
+      run_manager: Optional[AsyncCallbackManagerForChainRun] = None,
+    ) -> Dict[str, str]:
+      # Your custom chain logic goes here
+      # This is just an example that mimics LLMChain
+      prompt_value = self.prompt.format_prompt(**inputs)
+  
+      # Whenever you call a language model, or another chain, you should pass
+      # a callback manager to it. This allows the inner run to be tracked by
+      # any callbacks that are registered on the outer run.
+      # You can always obtain a callback manager for this by calling
+      # `run_manager.get_child()` as shown below.
+      response = await self.llm.agenerate_prompt(
+        [prompt_value],
+        callbacks=run_manager.get_child() if run_manager else None)
+  
+      # If you want to log something about this run, you can do so by calling
+      # methods on the `run_manager`, as shown below. This will trigger any
+      # callbacks that are registered for that event.
+      if run_manager:
+        await run_manager.on_text("Log something about this run")
+  
+      return {self.output_key: response.generations[0][0].text}
+  
+    @property
+    def _chain_type(self) -> str:
+      return "my_custom_chain"
+  
+  MyCustomChain.update_forward_refs()
+
+  from langchain.callbacks.stdout import StdOutCallbackHandler
+  from langchain.chat_models.openai import ChatOpenAI
+  from langchain.prompts.prompt import PromptTemplate
+  
+  template_with_history = """Engage in a conversation with the user based on the given image description. Use the following format:
+  
+  Begin! Remember to engage in the conversation based on the image description.
+  
+  Previous conversation history:
+  {history}
+  
+  Image Description:
+  {image_description}
+  
+  New question: {input}
+  {agent_scratchpad}"""
+  
+  chain = MyCustomChain(
+    prompt=PromptTemplate.from_template(template_with_history), llm=ChatOpenAI())
+  
+    
+  result = chain.run(
+    {
+      'image_description': image_description,
+      'input': query,
+      'agent_scratchpad': '',
+      'history': history
+    },
+    callbacks=[StdOutCallbackHandler()])
+  
+  print(result)
+  
+  return jsonify({'answer': result})
+
+
+
+
+
+######################################################################
+##APi using Flask - CSV Agent
+######################################################################
+
+
+from langchain.agents import create_csv_agent
+
+from langchain.llms import OpenAI
+
+
+
+
+@app.route('/agents_csv', methods=['POST'])
+def agents_csv():
+  data = request.get_json()
+  url = data['url']
+  query = data['query']
+  name = data['name']
+
+
+  response = requests.get(url)
+  file_path = os.path.join("APP_user_data", f"{name}")
+  with open(file_path, "wb") as f:
+      f.write(response.content)
+
+  
+  
+  agent = create_csv_agent(OpenAI(temperature=0), file_path, verbose=True)
+  
+  result = agent.run(query)
+
+  return jsonify({'answer': result})
+
+
 
 
 
