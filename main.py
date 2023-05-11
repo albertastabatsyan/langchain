@@ -330,6 +330,9 @@ from langchain.agents import AgentType
 from langchain.utilities import GoogleSerperAPIWrapper
 from langchain.agents import initialize_agent, Tool
 from langchain.agents import AgentType
+from langchain.chat_models import ChatAnthropic
+
+from langchain.tools import AIPluginTool
 
 
 @app.route('/agents_zsrd', methods=['POST'])
@@ -337,18 +340,34 @@ def agents_zsrd():
   data = request.get_json()
   query = data['query']
   tools_string = data['tools']
+  additional_tools = data['additional_tools']
+  temp = data['temp']
+  LLM = data['LLM']
 
-  llm = OpenAI(temperature=0.0)
-  math_llm = OpenAI(temperature=0.0)
+
+  if LLM == "anthropic":
+      llm = ChatAnthropic(temperature=temp)
+  elif LLM == "openai":
+     llm = OpenAI(temperature=temp)
+
+  
+  # Load tools specified in the request
   tools = load_tools(
       tools_string, 
       llm=llm,
   )
+
   
+  # Check if "klarna" is in tools_string and add the Klarna AI plugin tool if it is
+  if "klarna" in additional_tools:
+    tool = AIPluginTool.from_plugin_url("https://www.klarna.com/.well-known/ai-plugin.json")
+    tools.append(tool)
+
+ 
   agent_chain = initialize_agent(
       tools,
       llm,
-      agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+      agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
       verbose=True,
   )
   

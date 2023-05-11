@@ -96,13 +96,23 @@ def embeddings_file_handler(url, namespace, id):
 
 def embeddings_web_handler(url, namespace, id):
 
-  urls = [url]
-  
-  from langchain.document_loaders import UnstructuredURLLoader
-  loader = UnstructuredURLLoader(urls)
-  
-  documents = loader.load()
+  from langchain.document_loaders import WebBaseLoader
 
+  loader = WebBaseLoader(url)
+  
+  data = loader.load()
+
+
+  from langchain.text_splitter import CharacterTextSplitter
+  text_splitter = CharacterTextSplitter(        
+      separator = "\n\n",
+      chunk_size = 1000,
+      chunk_overlap  = 20
+  )
+
+  documents = text_splitter.split_documents(data)
+
+  
   # docsearch = Pinecone.from_existing_index(index_name, embeddings)
   # docsearch = Pinecone.from_documents(docs, embeddings, index_name=index_name)
     
