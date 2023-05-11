@@ -24,7 +24,6 @@ from langchain.schema import (
     HumanMessage,
     LLMResult,
     PromptValue,
-    get_buffer_string,
 )
 
 
@@ -35,8 +34,8 @@ def _get_verbosity() -> bool:
 class BaseChatModel(BaseLanguageModel, ABC):
     verbose: bool = Field(default_factory=_get_verbosity)
     """Whether to print out response text."""
-    callbacks: Callbacks = None
-    callback_manager: Optional[BaseCallbackManager] = None
+    callbacks: Callbacks = Field(default=None, exclude=True)
+    callback_manager: Optional[BaseCallbackManager] = Field(default=None, exclude=True)
 
     @root_validator()
     def raise_deprecation(cls, values: Dict) -> Dict:
@@ -69,9 +68,8 @@ class BaseChatModel(BaseLanguageModel, ABC):
         callback_manager = CallbackManager.configure(
             callbacks, self.callbacks, self.verbose
         )
-        message_strings = [get_buffer_string(m) for m in messages]
-        run_manager = callback_manager.on_llm_start(
-            {"name": self.__class__.__name__}, message_strings
+        run_manager = callback_manager.on_chat_model_start(
+            {"name": self.__class__.__name__}, messages
         )
 
         new_arg_supported = inspect.signature(self._generate).parameters.get(
@@ -104,9 +102,8 @@ class BaseChatModel(BaseLanguageModel, ABC):
         callback_manager = AsyncCallbackManager.configure(
             callbacks, self.callbacks, self.verbose
         )
-        message_strings = [get_buffer_string(m) for m in messages]
-        run_manager = await callback_manager.on_llm_start(
-            {"name": self.__class__.__name__}, message_strings
+        run_manager = await callback_manager.on_chat_model_start(
+            {"name": self.__class__.__name__}, messages
         )
 
         new_arg_supported = inspect.signature(self._agenerate).parameters.get(
