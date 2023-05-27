@@ -82,6 +82,7 @@ def embeddings_file_handler(url, namespace, id):
     # docsearch = Pinecone.from_documents(docs, embeddings, index_name=index_name)
     
     pinecone = Pinecone(index=index, embedding_function=embeddings.embed_query, text_key="text", namespace=namespace)
+
     
     docsearch = pinecone.add_documents(documents=documents)
 

@@ -90,9 +90,13 @@ def chains_qa():
 
 
   if LLM == "anthropic":
-      llm = ChatAnthropic(temperature=temp)
+     llm = ChatAnthropic(temperature=temp)
   elif LLM == "openai":
      llm = OpenAI(temperature=temp)
+  elif LLM == "gpt-3.5-turbo":
+     llm = ChatOpenAI(model_name='gpt-3.5-turbo', temperature=temp)
+  elif LLM == "gpt-4":
+     llm = ChatOpenAI(model_name='gpt-4', temperature=temp)
   else:
       return jsonify({"error": "Invalid LLM value"}), 400
   
