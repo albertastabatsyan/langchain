@@ -60,6 +60,102 @@ def home():
 
 
 
+
+
+
+
+
+
+
+
+
+######################################################################
+##APi using Flask - EMBEDDINGS - Figma
+########################################################################
+
+from langchain.document_loaders.figma import FigmaFileLoader
+
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.chat_models import ChatOpenAI
+from langchain.indexes import VectorstoreIndexCreator
+from langchain.chains import ConversationChain, LLMChain
+from langchain.memory import ConversationBufferWindowMemory
+from langchain.prompts.chat import (
+    ChatPromptTemplate,
+    SystemMessagePromptTemplate,
+    AIMessagePromptTemplate,
+    HumanMessagePromptTemplate,
+)
+
+
+@app.route('/embeddings_figma', methods=['POST'])
+def embeddings_figma():
+  data = request.get_json()
+  query = data['query']
+  FIGMA_ACCESS_TOKEN = data['FIGMA_ACCESS_TOKEN']
+  FIGMA_NODE_IDS = data['FIGMA_NODE_IDS']
+  FIGMA_FILE_KEY = data['FIGMA_FILE_KEY']
+  sys_template = data['sys_template']
+  human_template = data['human_template']
+  
+
+
+
+  
+  figma_loader = FigmaFileLoader(
+      FIGMA_ACCESS_TOKEN,
+      FIGMA_NODE_IDS,
+      FIGMA_FILE_KEY
+  )
+  
+  
+  
+  
+  # see https://python.langchain.com/en/latest/modules/indexes/getting_started.html for more details
+  index = VectorstoreIndexCreator().from_loaders([figma_loader])
+  figma_doc_retriever = index.vectorstore.as_retriever()
+  
+  
+  
+  
+  
+  def generate_code(human_input):
+      # I have no idea if the Jon Carmack thing makes for better code. YMMV.
+      # See https://python.langchain.com/en/latest/modules/models/chat/getting_started.html for chat info
+      system_prompt_template = sys_template + " \n"""" 
+      Figma file nodes and metadata: {context}"""
+  
+      human_prompt_template = human_template
+      system_message_prompt = SystemMessagePromptTemplate.from_template(system_prompt_template)
+      human_message_prompt = HumanMessagePromptTemplate.from_template(human_prompt_template)
+      # delete the gpt-4 model_name to use the default gpt-3.5 turbo for faster results
+      gpt_4 = ChatOpenAI(temperature=.02)
+      # Use the retriever's 'get_relevant_documents' method if needed to filter down longer docs
+      relevant_nodes = figma_doc_retriever.get_relevant_documents(human_input)
+      conversation = [system_message_prompt, human_message_prompt]
+      chat_prompt = ChatPromptTemplate.from_messages(conversation)
+      response = gpt_4(chat_prompt.format_prompt( 
+          context=relevant_nodes, 
+          text=human_input).to_messages())
+      return response
+  
+  
+  
+  
+  
+  response = generate_code(query)
+  
+  
+  
+  return jsonify({'answer': str(response)})
+
+
+
+
+
+
+
+
 ######################################################################
 ##APi using Flask - CHAINS - Retrieval QA - 1
 ########################################################################
